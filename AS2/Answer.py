@@ -42,13 +42,8 @@ class ReLU:
         """
         self.out = None
         # =============================== EDIT HERE ===============================
-        print("ReLU Starts...")
-        print("\tInput size : ", z.shape)
-
-        self.out = z * (z > 0)
-
-        print("\tOutput size : ", self.out.shape)
-
+        self.zero_mask = (z > 0).astype(np.int)
+        self.out = z * self.zero_mask
         # =========================================================================
         return self.out
 
@@ -68,13 +63,7 @@ class ReLU:
         """
         dz = None
         # =============================== EDIT HERE ===============================
-        # input/output d_prev would be (BN, input shape 784)
-        print("B_ReLU Starts...")
-        print("\tInput size : ", d_prev.shape)
-
-        dz = d_prev * (1 * (d_prev > 0))
-
-        print("\tOutput size : ", dz.shape)
+        dz = d_prev * self.zero_mask
         # =========================================================================
         return dz
 
@@ -108,10 +97,8 @@ class Sigmoid:
             self.out : Values applied elementwise sigmoid function on input 'z'.
         """
         self.out = None
-        # =============== EDIT HERE ===============
-        print("Sigmoid FT Starts...")
-        print("\tInput size : ", z.shape)
-
+        # =============== EDIT HERE ===============   
+        self.out = 1/(1 + np.exp(-z))
         # =========================================
         return self.out
 
@@ -131,8 +118,7 @@ class Sigmoid:
         """
         dz = None
         # =============== EDIT HERE ===============
-        print("B_Sigmoid Starts...")
-
+        dz = d_prev * self.out * (1-self.out)
         # =========================================
         return dz
 
@@ -170,9 +156,7 @@ class Tanh:
         """
         self.out = None
         # =============== EDIT HERE ===============
-        print("Tanh FT Starts...")
-        print("\tInput size : ", z.shape)
-
+        self.out = np.sinh(z) / np.cosh(z)
         # =========================================
         return self.out
 
@@ -193,8 +177,7 @@ class Tanh:
         """
         dz = None
         # =============== EDIT HERE ===============
-        print("B_Tanh Starts...")
-
+        dz = d_prev * (1 - self.out * self.out)
         # =========================================
         return dz
 
@@ -247,14 +230,8 @@ class FCLayer:
         self.x = x
         self.out = None
         # =============================== EDIT HERE ===============================
-        print("FC Starts...")
-        print("\tInput size : ", self.x.shape)
-
         self.out = np.dot(self.x, self.W)
         self.out = self.out + self.b
-
-        print("\tOutput size : ", self.out.shape)
-
         # =========================================================================
         return self.out
 
@@ -277,18 +254,9 @@ class FCLayer:
         self.dW = None      # Gradient w.r.t. weight (self.W)
         self.db = None      # Gradient w.r.t. bias (self.b)
         # =============================== EDIT HERE ===============================
-        # d_pre: dL/dNet(dScore)
-        # (d netk / dhj) sum ( k is the previous layer's shape[1], j is current layer num)
-        print("B_FC Starts...{")
-        print("\tW shape : {}".format(self.W.shape))
-        print("\tInput size : ", d_prev.shape)
-
-        self.dW = np.transpose(np.dot(np.transpose(d_prev), self.x)) # derivative of net(delta k) * hj -> (BS, ) 
-        print("\tdW size : {} * {} = {}".format(np.transpose(d_prev).shape, self.x.shape, self.dW.shape))
+        self.dW = np.dot(np.transpose(self.x), d_prev) + reg_lambda * self.W # derivative of net(delta k) * hj -> (BS, ) 
         self.db = np.squeeze(np.dot(np.transpose(d_prev), np.ones((d_prev.shape[0], 1)))) # dNet / db
-        print("\tdb size : {} * {} = {}".format(np.transpose(d_prev).shape, np.ones((d_prev.shape[0], 1)).shape, self.db.shape))
         dx = np.dot(d_prev, np.transpose(self.W)) # sum of dNet / dh
-        print("\tOutput(dw of hj) size : {} * {} = {}".format(d_prev.shape, np.transpose(self.W).shape, dx.shape))
         # =========================================================================
         return dx
 
@@ -333,15 +301,7 @@ class SoftmaxLayer:
         """
         self.y_hat = None
         # =============================== EDIT HERE ===============================
-        print("Softmax FT Starts...")
-        print("\tInput size : ", x.shape)
-
-        exp_x = np.exp(x)
-        sum_exp = np.sum(exp_x, axis=1).reshape(x.shape[0], -1)
-        self.y_hat = exp_x / sum_exp
-        
-        print("\tOutput size : ", self.y_hat.shape)
-
+        self.y_hat = softmax(x)
         # =========================================================================
         return self.y_hat
 
@@ -366,13 +326,7 @@ class SoftmaxLayer:
         watch_size = self.y.shape[0]
         dx = None
         # =============================== EDIT HERE ===============================
-        print("B_Softmax Starts...")
-
-        dx = self.y_hat - self.y
-        # ref : https://www.mldawn.com/back-propagation-with-cross-entropy-and-softmax/
-
-        print("\tOutput size : ", dx.shape)
-
+        dx = (self.y_hat - self.y) / watch_size
         # =========================================================================
         return dx
 
@@ -400,18 +354,10 @@ class SoftmaxLayer:
         self.y_hat = y_hat
         self.y = y
         # =============================== EDIT HERE ===============================
-        print("Cross Entropy Starts...")
-        print("\tInput size(y_hat, y) : ", y_hat.shape, y.shape)
-
-        # print(y[:2], '\n', y_hat[:2])
-        log_y = np.log10(y_hat + eps)
-        # print(log_y[:2])
-        mul_log = np.multiply(y, log_y)
-        # print(mul_log[:2])
+        log_y = np.log(y_hat + eps)
+        mul_log = y * log_y
         sum_mul = np.sum(mul_log)
-        # print(sum_mul)
         self.loss =  - sum_mul / y.shape[0]
-
         # =========================================================================
         return self.loss
 
