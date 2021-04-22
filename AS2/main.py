@@ -1,3 +1,4 @@
+#%%
 import time
 import numpy as np
 from utils import load_mnist, load_fashion_mnist
@@ -32,9 +33,9 @@ model = ClassifierModel()
 dataset = 'mnist'
 
 # Hyper-parameters
-num_epochs = 500
+num_epochs = 5
 learning_rate = 0.01
-reg_lambda = 0.01
+reg_lambda = 1e-8
 print_every = 10
 
 batch_size = 1000
@@ -45,34 +46,41 @@ batch_size = 1000
 # model.add_layer('Softmax Layer', SoftmaxLayer())
 
 # Add layers - example 2
-model.add_layer('FC-1', FCLayer(784, 500))
+model.add_layer('FC-1', FCLayer(784, 500)) # BC * 784 => BC * 500
 model.add_layer('ReLU1', ReLU())
-model.add_layer('FC-2', FCLayer(500, 500))
+model.add_layer('FC-2', FCLayer(500, 500)) # BC * 500 => BC * 10 ( num of category )
 model.add_layer('ReLU2', ReLU())
-model.add_layer('FC-3', FCLayer(500, 10))
-model.add_layer('Softmax Layer', SoftmaxLayer())
-
+model.add_layer('FC-3', FCLayer(500, 10)) # BC * 500 => BC * 10 ( num of category )
+model.add_layer('Tanh', Tanh())
+model.add_layer('Softmax Layer', SoftmaxLayer()) # output is probability
 # =========================================================================
-assert dataset in ['mnist', 'fashion_mnist']
+assert dataset in ['mnist', 'fashion_mnist'] # give error if dataset doesn't match
 
 # Dataset
-if dataset == 'mnist':
-    x_train, y_train, x_test, y_test = load_mnist('./data')
-else:
-    x_train, y_train, x_test, y_test = load_fashion_mnist('./data')
+# MNIST
+# x : (5000, 1, 28, 28)(num of total dataset, reshape, x row, y col)
+# y : (5000, 10)(num of total dataset, num of classes)
 
-x_train, x_test = np.squeeze(x_train), np.squeeze(x_test)
+# Fashion_MIST
+# x : (6000, 1, 28, 28)(num of total dataset, reshape, x row, y col)
+# y : (6000, 10)(num of total dataset, num of classes)
+if dataset == 'mnist':
+    x_train, y_train, x_test, y_test = load_mnist('./data') 
+else:
+    x_train, y_train, x_test, y_test = load_fashion_mnist('./data') # (6000, 1, 28, 28)(num of total dataset, reshape, x row, y col)
+
+x_train, x_test = np.squeeze(x_train), np.squeeze(x_test) # remove reshape => (# of data 5000/6000, 28, 28)
 
 # Random 10% of train data as valid data
 num_train = len(x_train)
-perm = np.random.permutation(num_train)
+perm = np.random.permutation(num_train) # sort idx randomly
 num_valid = int(len(x_train) * 0.1)
 
-valid_idx = perm[:num_valid]
+valid_idx = perm[:num_valid] # last 10% idx are valid set
 train_idx = perm[num_valid:]
 
-x_valid, y_valid = x_train[valid_idx], y_train[valid_idx]
-x_train, y_train = x_train[train_idx], y_train[train_idx]
+x_valid, y_valid = x_train[valid_idx], y_train[valid_idx] # split valid set
+x_train, y_train = x_train[train_idx], y_train[train_idx] # split train set
 
 num_train, height, width = x_train.shape
 num_class = y_train.shape[1]
@@ -95,6 +103,7 @@ for epoch in range(1, num_epochs + 1):
     start = time.time()
     epoch_loss = 0.0
     for b in range(num_batch):
+        # set start index(s) and end index(e)
         s = b * batch_size
         e = (b+1) * batch_size if (b+1) * batch_size < len(x_train) else len(x_train)
 
@@ -113,7 +122,7 @@ for epoch in range(1, num_epochs + 1):
     lapse_time = end - start
     print('Epoch %d took %.2f seconds\n' % (epoch, lapse_time))
 
-    if epoch % print_every == 0:
+    if True:#epoch % print_every == 0:
         # TRAIN ACCURACY
         prob = model.predict(x_train)
         pred = np.argmax(prob, -1).astype(int)
@@ -175,3 +184,5 @@ plt.ylabel('Accuracy')
 plt.legend()
 
 plt.show()
+
+# %%
