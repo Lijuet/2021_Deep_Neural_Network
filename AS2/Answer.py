@@ -409,7 +409,6 @@ class ClassifierModel:
 
     def backward(self, reg_lambda):
         # Back-propagation
-        print("Bacward Starts...")
         d_prev = 1
         d_prev = self.softmax_layer.backward(d_prev, reg_lambda)
         for name, layer in list(self.layers.items())[::-1]:
