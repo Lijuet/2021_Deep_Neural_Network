@@ -24,7 +24,13 @@ class MLP_classifier(nn.Module):
         self.loss_function = None
         self.optimizer = None
         # =============================== EDIT HERE ===============================
+        self.fc1 = nn.Linear(in_features=input_dim, out_features=1024, bias=True)
+        self.fc2 = nn.Linear(in_features=1024, out_features=256, bias=True)
+        self.fc3 = nn.Linear(in_features=256, out_features=self.output_dim, bias=True)
+        self.log_softmax = nn.LogSoftmax(dim=1)
 
+        self.loss_function = nn.CrossEntropyLoss()
+        self.optimizer = torch.optim.SGD(self.parameters(), lr=learning_rate) 
         # =========================================================================
 
     def forward(self, x):
@@ -34,7 +40,10 @@ class MLP_classifier(nn.Module):
         '''
         out = torch.zeros((x.shape[0], self.output_dim))
         # =============================== EDIT HERE ===============================
-
+        z = torch.relu(self.fc1(x))
+        z = torch.relu(self.fc2(z))
+        z = self.log_softmax(self.fc3(z))
+        out = z
         # =========================================================================
         return out
 
@@ -46,7 +55,17 @@ class MLP_classifier(nn.Module):
         '''
         pred_y = np.zeros((x.shape[0], ))
         # =============================== EDIT HERE ===============================
+        _pred_y = []
+        x_tenser = torch.tensor(x)
+        data_loader = DataLoader(x_tenser, batch_size=self.batch_size)
 
+        with torch.no_grad():
+            for batch_data in data_loader:
+                batch_x = batch_data
+                batch_pred_y = self.forward(batch_x)
+                _pred_y.append(batch_pred_y.numpy())
+        pred_y = np.concatenate(_pred_y, axis=0)
+        pred_y = np.argmax(pred_y, -1).astype(int)
         # =========================================================================
         return pred_y
 

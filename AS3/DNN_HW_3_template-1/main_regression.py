@@ -1,3 +1,4 @@
+#%%
 from models.MLP_regressor import MLP_regressor
 import time
 import numpy as np
@@ -65,3 +66,5 @@ mse = MSE(pred, y_test)
 print('MSE at Best Epoch : %.2f' % (mse))
 
 model.plot_accuracy()
+
+# %%

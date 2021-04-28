@@ -23,7 +23,8 @@ class MLP_regressor(nn.Module):
         self.optimizer = None
         # =============================== EDIT HERE ===============================
         self.fc1 = nn.Linear(in_features=input_dim, out_features=10, bias=True)
-        self.fc2 = nn.Linear(in_features=10, out_features=1, bias=True)
+        self.fc2 = nn.Linear(in_features=10, out_features=10, bias=True)
+        self.fc3 = nn.Linear(in_features=10, out_features=1, bias=True)
 
         self.loss_function = nn.MSELoss()
         self.optimizer = torch.optim.SGD(self.parameters(), lr=learning_rate)
@@ -38,9 +39,10 @@ class MLP_regressor(nn.Module):
         '''
         out = torch.zeros((x.shape[0], 1))
         # =============================== EDIT HERE ===============================
-        temp = self.fc1(x)
-        temp = self.fc2(temp)
-        out = temp
+        z = torch.tanh(self.fc1(x))
+        z = torch.tanh(self.fc2(z))
+        z = self.fc3(z)
+        out = z
         # =========================================================================
         return out
 
@@ -52,7 +54,6 @@ class MLP_regressor(nn.Module):
         '''
         pred_y = np.zeros((x.shape[0], 1))
         # =============================== EDIT HERE ===============================
-        # transfrom numpy data to torch data and make torch dataset
         _pred_y = []
         x_tenser = torch.tensor(x)
         data_loader = DataLoader(x_tenser, batch_size=self.batch_size)
@@ -63,7 +64,6 @@ class MLP_regressor(nn.Module):
                 batch_pred_y = self.forward(batch_x)
                 _pred_y.append(batch_pred_y.numpy())
         pred_y = np.concatenate(_pred_y, axis=0)
-
         # =========================================================================
         return pred_y
 
