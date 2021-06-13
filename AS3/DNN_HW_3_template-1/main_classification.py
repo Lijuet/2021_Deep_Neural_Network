@@ -1,3 +1,4 @@
+#%%
 import time
 import numpy as np
 from utils import load_mnist, load_fashion_mnist
@@ -16,13 +17,13 @@ np.tanh = lambda x: x
 """
 
 # mnist / fashion_mnist
-dataset = 'mnist'
+dataset = 'fashion_mnist'
 
 # Hyper-parameters
-num_epochs = 200
+num_epochs = 20
 learning_rate = 0.01
 reg_lambda = 0.01
-print_every = 10
+print_every = 1
 
 batch_size = 1000
 
@@ -73,3 +74,5 @@ test_acc = correct / total
 print('Test Accuracy at Best Epoch : %.2f' % (test_acc))
 
 model.plot_accuracy()
+
+# %%
